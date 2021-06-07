@@ -51,3 +51,5 @@ fillZeros(String,N,R):-
     string_concat("0", String, StringNew),
     N1 is N - 1,
     fillZeros(StringNew,N1,R).
+
+%hello
