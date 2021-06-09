@@ -55,6 +55,17 @@ fillZeros(String,N,R):-
 
 %component 1
 
+getDataFromCache(StringAddress,Cache,Data,0,directMap,BitsNum):-
+    getIndexTag(StringAddress,BitsNum,Index,Tag),
+    atom_number(Index,Idx),
+    convertBinToDec(Idx,Ind),
+    nth0(Ind, Cache, Item),
+    Item=item(tag(Tag),data(Data),1,_).
+
+convertAddress(Bin,BitsNum,Tag,Idx,directMap):-
+    Idx is Bin mod (10 ** BitsNum),
+    Tag is Bin // (10 ** BitsNum).
+
 %component 2
 
 getIndexTag(StringAddress,BitsNum,Index,Tag):-
@@ -98,7 +109,6 @@ findTagInSet(Tag,[item(tag(Tag2),_,_,_)|T], Data, Acc, HopsNum):-
     Tag \= Tag2,
     Acc1 is Acc + 1,
     findTagInSet(Tag,T, Data, Acc1, HopsNum).
-
 %component 3
 
 tagToString(MemoryWord,BitsNum,Tag,StrTag):-
@@ -140,6 +150,11 @@ incrementCache([item(Tag, Data, 1, Obit)|T], [item(Tag, Data, 1, ObitNew)|Tn]):-
 incrementCache([item(Tag, Data, 0, Obit)|T], [item(Tag, Data, 0, Obit)|Tn]):-
     incrementCache(T, Tn).
 
+sumListedList([],Acc,Acc).
+sumListedList([H|T],Acc,R):-
+    append(Acc, H, NewAcc),
+    sumListedList(T, NewAcc, R).
+
 replaceInCache(Tag,Idx,Mem,OldCache,NewCache,ItemData,directMap,BitsNum):-
     convertBinToDec(Idx,I),
     MemAdrsBin is Tag * (10**BitsNum) + Idx,
@@ -156,12 +171,21 @@ replaceInCache(Tag,0,Mem,OldCache,NewCache,ItemData,fullyAssoc,_):-
     incrementCache(OldCache, MidCache),
     replaceIthItem(item(tag(FinalTag),data(ItemData),1,0),MidCache,Indx,NewCache).
 
-/*
 replaceInCache(Tag,Idx,Mem,OldCache,NewCache,ItemData,setAssoc,SetsNum):-
     convertBinToDec(Idx,I),
+    logBase2(SetsNum, BitsNum),
     MemAdrsBin is Tag * (10**BitsNum) + Idx,
     convertBinToDec(MemAdrsBin,MemAdrs),
     nth0(MemAdrs, Mem, ItemData),
-    tagToString(ItemData,BitsNum,Tag,FinalTag),*/
+    tagToString(ItemData,BitsNum,Tag,FinalTag),
+    length(OldCache, CacheLen),
+    SetSize is CacheLen // SetsNum,
+    splitEvery(SetSize, OldCache, ListedCache),
+    nth0(I, ListedCache, TheSet),
+    searchCache(TheSet, Indx),
+    incrementCache(TheSet, IncSet),
+    replaceIthItem(item(tag(FinalTag),data(ItemData),1,0),IncSet,Indx,NewSet),
+    replaceIthItem(NewSet,ListedCache,I,NewListedCache),
+    sumListedList(NewListedCache, [], NewCache).
 
 
