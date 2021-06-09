@@ -57,6 +57,48 @@ fillZeros(String,N,R):-
 
 %component 2
 
+getIndexTag(StringAddress,BitsNum,Index,Tag):-
+    string_length(StringAddress,StringLength),
+    atom_number(StringAddress, Number),
+    
+    Ind is Number mod (10 ** BitsNum),
+    atom_number(StringIndex, Ind),
+    string_length(StringIndex,LenIndex),
+    Diff is BitsNum - LenIndex,
+    
+    T is Number // (10 ** BitsNum),
+    atom_number(StringTag,T),
+    string_length(StringTag,LenTag),
+    DiffTag is StringLength - LenTag - BitsNum,
+    fillZeros(StringTag,DiffTag,Tag),
+    
+    fillZeros(StringIndex,Diff,Index).
+    
+    
+    
+convertAddress(Bin,SetsNum,Tag,Idx,setAssoc):-
+    getNumBits(SetsNum,setAssoc,_,BitsNum),
+    Idx is Bin mod (10 ** BitsNum),
+    Tag is Bin // (10 ** BitsNum).
+    
+getDataFromCache(StringAddress,Cache,Data,HopsNum,setAssoc,SetsNum):-
+    getNumBits(SetsNum,setAssoc,_,BitsNum),
+    getIndexTag(StringAddress,BitsNum,Index,Tag),
+    atom_number(Index, IndexBin),
+    convertBinToDec(IndexBin,IndexDecimal),
+    length(Cache,CacheLength),
+    AddressPerSet is CacheLength // SetsNum,
+    splitEvery(AddressPerSet, Cache, Sets),
+    nth0(IndexDecimal, Sets, Set),
+    findTagInSet(Tag, Set, Data, 0, HopsNum).
+
+findTagInSet(Tag, [item(tag(Tag), Data, 1, _)|_], Data, Acc, Acc).
+    
+findTagInSet(Tag,[item(tag(Tag2),_,_,_)|T], Data, Acc, HopsNum):-
+    Tag \= Tag2,
+    Acc1 is Acc + 1,
+    findTagInSet(Tag,T, Data, Acc1, HopsNum).
+
 %component 3
 
 tagToString(MemoryWord,BitsNum,Tag,StrTag):-
@@ -121,3 +163,5 @@ replaceInCache(Tag,Idx,Mem,OldCache,NewCache,ItemData,setAssoc,SetsNum):-
     convertBinToDec(MemAdrsBin,MemAdrs),
     nth0(MemAdrs, Mem, ItemData),
     tagToString(ItemData,BitsNum,Tag,FinalTag),*/
+
+
