@@ -109,6 +109,7 @@ findTagInSet(Tag,[item(tag(Tag2),_,_,_)|T], Data, Acc, HopsNum):-
     Tag \= Tag2,
     Acc1 is Acc + 1,
     findTagInSet(Tag,T, Data, Acc1, HopsNum).
+
 %component 3
 
 tagToString(MemoryWord,BitsNum,Tag,StrTag):-
